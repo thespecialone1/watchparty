@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ChatPanel } from '@/components/chat/ChatPanel';
+import { PlaybackControls, PlaybackAction } from '@/components/video/PlaybackControls';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { useScreenCapture, getAudioCapabilities } from '@/hooks/useScreenCapture';
@@ -10,7 +11,7 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useSessionStore } from '@/store/sessionStore';
 import { useConnectionStore } from '@/store/connectionStore';
 import { useChatStore } from '@/store/chatStore';
-import { MessageType, WebSocketMessage, ChatPayload, UserEventPayload } from '@/types/message';
+import { MessageType, WebSocketMessage, ChatPayload, UserEventPayload, PlaybackControlPayload } from '@/types/message';
 import {
     Mic, MicOff, MonitorUp, MonitorOff,
     MessageSquare, LogOut, Users, Loader2, X, Volume2
@@ -182,19 +183,46 @@ export function WatchRoom() {
                 break;
             }
 
+            case MessageType.PLAYBACK_CONTROL: {
+                const payload = message.payload as PlaybackControlPayload;
+                // Don't show toast for own commands
+                if (payload.from_user !== userId) {
+                    const actionText = payload.action === 'toggle' ? 'toggled'
+                        : payload.action === 'seek_forward' ? `skipped +${payload.seek_seconds}s`
+                            : payload.action === 'seek_backward' ? `went back ${payload.seek_seconds}s`
+                                : payload.action;
+                    toast.info(`${payload.from_username} ${actionText}`, { duration: 2000 });
+                }
+                // TODO: If host, execute the command on the actual video element
+                // This requires the video to be in a controlled state
+                console.log('[PlaybackControl] Received:', payload);
+                break;
+            }
+
             default:
                 console.log('Unhandled message type:', message.type);
         }
-    }, [addMessage, addParticipant, removeParticipant, isHost, isChatOpen]);
+    }, [addMessage, addParticipant, removeParticipant, isHost, isChatOpen, userId]);
 
     // Setup WebSocket
-    const { sendChat, sendSignal } = useWebSocket({
+    const { sendChat, sendSignal, sendPlaybackControl } = useWebSocket({
         sessionId: sessionId || '',
         token: token || '',
         onMessage: handleWebSocketMessage,
         onOpen: () => toast.success('Connected to session'),
         onClose: () => !wsReconnecting && toast.error('Disconnected from session'),
     });
+
+    // Handle playback control
+    const handlePlaybackControl = useCallback((action: PlaybackAction, seekSeconds?: number) => {
+        sendPlaybackControl(action, userId, username, seekSeconds);
+        // Show feedback for own action
+        const actionText = action === 'toggle' ? 'Toggled playback'
+            : action === 'seek_forward' ? `Skipped +${seekSeconds}s`
+                : action === 'seek_backward' ? `Went back ${seekSeconds}s`
+                    : action === 'play' ? 'Playing' : 'Paused';
+        toast.success(actionText, { duration: 1500 });
+    }, [sendPlaybackControl, userId, username]);
 
     // Setup WebRTC with separate voice and screen streams
     const webRTC = useWebRTC({
@@ -352,14 +380,25 @@ export function WatchRoom() {
                 {/* Video area */}
                 <div className="flex-1 flex flex-col min-h-0 p-2 lg:p-3">
                     {/* Main video (shared content) */}
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0 relative group">
                         {displayStream ? (
-                            <VideoPlayer
-                                stream={displayStream}
-                                isMuted={isHost}
-                                isLocal={isHost}
-                                className="w-full h-full"
-                            />
+                            <>
+                                <VideoPlayer
+                                    stream={displayStream}
+                                    isMuted={isHost}
+                                    isLocal={isHost}
+                                    className="w-full h-full"
+                                />
+                                {/* Playback Controls Overlay - always show for all users when stream is active */}
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <div className="bg-zinc-900/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-zinc-700/50">
+                                        <PlaybackControls
+                                            onControl={handlePlaybackControl}
+                                            disabled={!wsConnected}
+                                        />
+                                    </div>
+                                </div>
+                            </>
                         ) : (
                             <div className="w-full h-full rounded-xl bg-zinc-900 flex items-center justify-center border border-zinc-800/50">
                                 <div className="text-center p-6">

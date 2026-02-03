@@ -6,13 +6,14 @@ import "encoding/json"
 type MessageType string
 
 const (
-	MessageTypeChat          MessageType = "chat"
-	MessageTypeWebRTCOffer   MessageType = "webrtc_offer"
-	MessageTypeWebRTCAnswer  MessageType = "webrtc_answer"
-	MessageTypeICECandidate  MessageType = "ice_candidate"
-	MessageTypePlaybackState MessageType = "playback_state"
-	MessageTypeUserJoined    MessageType = "user_joined"
-	MessageTypeUserLeft      MessageType = "user_left"
+	MessageTypeChat            MessageType = "chat"
+	MessageTypeWebRTCOffer     MessageType = "webrtc_offer"
+	MessageTypeWebRTCAnswer    MessageType = "webrtc_answer"
+	MessageTypeICECandidate    MessageType = "ice_candidate"
+	MessageTypePlaybackState   MessageType = "playback_state"
+	MessageTypePlaybackControl MessageType = "playback_control"
+	MessageTypeUserJoined      MessageType = "user_joined"
+	MessageTypeUserLeft        MessageType = "user_left"
 )
 
 // WebSocketMessage is the standard message format for WebSocket communication
@@ -45,6 +46,14 @@ type PlaybackStatePayload struct {
 	Playing     bool    `json:"playing"`
 	CurrentTime float64 `json:"current_time"`
 	Volume      float64 `json:"volume"`
+}
+
+// PlaybackControlPayload is the payload for playback control commands
+type PlaybackControlPayload struct {
+	Action       string  `json:"action"`        // play, pause, seek_forward, seek_backward, toggle
+	SeekSeconds  float64 `json:"seek_seconds"`  // For seek: number of seconds to seek
+	FromUser     string  `json:"from_user"`     // User ID who sent the command
+	FromUsername string  `json:"from_username"` // Username who sent the command
 }
 
 // WebRTCSignalPayload represents WebRTC signaling data

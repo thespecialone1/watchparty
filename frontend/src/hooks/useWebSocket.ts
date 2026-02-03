@@ -147,6 +147,25 @@ export const useWebSocket = ({
         });
     }, [sendMessage, sessionId]);
 
+    const sendPlaybackControl = useCallback((
+        action: 'play' | 'pause' | 'toggle' | 'seek_forward' | 'seek_backward',
+        userId: string,
+        username: string,
+        seekSeconds?: number
+    ) => {
+        sendMessage({
+            type: MessageType.PLAYBACK_CONTROL,
+            payload: {
+                action,
+                seek_seconds: seekSeconds || 10,
+                from_user: userId,
+                from_username: username,
+            },
+            session_id: sessionId,
+            user_id: userId,
+        });
+    }, [sendMessage, sessionId]);
+
     const disconnect = useCallback(() => {
         if (reconnectTimeout.current) {
             clearTimeout(reconnectTimeout.current);
@@ -169,6 +188,7 @@ export const useWebSocket = ({
         sendMessage,
         sendChat,
         sendSignal,
+        sendPlaybackControl,
         disconnect,
         isConnecting,
     };

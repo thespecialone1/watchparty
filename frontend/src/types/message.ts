@@ -4,6 +4,7 @@ export enum MessageType {
     WEBRTC_ANSWER = 'webrtc_answer',
     ICE_CANDIDATE = 'ice_candidate',
     PLAYBACK_STATE = 'playback_state',
+    PLAYBACK_CONTROL = 'playback_control',
     USER_JOINED = 'user_joined',
     USER_LEFT = 'user_left',
 }
@@ -42,6 +43,13 @@ export interface PlaybackStatePayload {
     playing: boolean;
     current_time: number;
     volume: number;
+}
+
+export interface PlaybackControlPayload {
+    action: 'play' | 'pause' | 'seek_forward' | 'seek_backward' | 'toggle';
+    seek_seconds?: number;
+    from_user: string;
+    from_username: string;
 }
 
 export interface WebRTCSignalPayload {
