@@ -117,6 +117,28 @@ func main() {
 	app.Use("/ws/:sessionId", wsHandler.UpgradeMiddleware())
 	app.Get("/ws/:sessionId", wsHandler.HandleWebSocket())
 
+	// Serve static frontend files in production
+	// The frontend dist folder should be at ../frontend/dist relative to the binary
+	frontendDist := os.Getenv("FRONTEND_DIST")
+	if frontendDist == "" {
+		frontendDist = "../frontend/dist"
+	}
+	
+	// Check if frontend dist exists
+	if _, err := os.Stat(frontendDist); err == nil {
+		log.Printf("Serving frontend from: %s", frontendDist)
+		
+		// Serve static files
+		app.Static("/", frontendDist)
+		
+		// SPA fallback - serve index.html for all unmatched routes
+		app.Get("/*", func(c *fiber.Ctx) error {
+			return c.SendFile(frontendDist + "/index.html")
+		})
+	} else {
+		log.Println("Frontend dist not found, running in API-only mode")
+	}
+
 	// Graceful shutdown
 	go func() {
 		sigChan := make(chan os.Signal, 1)
