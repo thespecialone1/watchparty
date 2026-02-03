@@ -363,7 +363,7 @@ export function WatchRoom() {
                 <div className="flex items-center gap-3">
                     {/* Voice indicator */}
                     {voiceStream && hasRemoteUser && (
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs bg-purple-500/10 text-purple-400">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary">
                             <Volume2 className="w-3 h-3" />
                             Voice Active
                         </div>
@@ -412,7 +412,7 @@ export function WatchRoom() {
                                         {isHost ? 'Click the screen share button below' : 'The stream will appear here'}
                                     </p>
                                     {voiceStream && (
-                                        <p className="text-purple-400 text-sm mt-4">
+                                        <p className="text-primary text-sm mt-4">
                                             🎤 Voice chat is active - you can talk!
                                         </p>
                                     )}
@@ -504,7 +504,7 @@ export function WatchRoom() {
                         {/* Status info */}
                         <div className="mt-3 text-xs text-zinc-500">
                             {isAudioEnabled ? (
-                                <span className="text-purple-400">🎤 Your mic is on</span>
+                                <span className="text-primary">🎤 Your mic is on</span>
                             ) : (
                                 <span>🔇 Your mic is muted</span>
                             )}

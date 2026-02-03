@@ -74,7 +74,7 @@ function ControlButton({
                         className={cn(
                             'relative w-12 h-12 rounded-full flex items-center justify-center',
                             'transition-all duration-200 ease-out',
-                            'focus:outline-none focus:ring-2 focus:ring-purple-500/50',
+                            'focus:outline-none focus:ring-2 focus:ring-primary/50',
                             disabled && 'opacity-50 cursor-not-allowed',
                             isDestructive
                                 ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/25'
@@ -87,7 +87,7 @@ function ControlButton({
 
                         {/* Badge for unread count */}
                         {badge !== undefined && badge > 0 && (
-                            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                                 {badge > 9 ? '9+' : badge}
                             </span>
                         )}
@@ -121,7 +121,7 @@ export function MediaControls({
             className={cn(
                 'flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 rounded-full',
                 'bg-gradient-to-r from-[#1a1a2e]/95 to-[#2a2a40]/95 backdrop-blur-2xl',
-                'border border-white/10 shadow-2xl shadow-purple-900/20',
+                'border border-white/10 shadow-2xl shadow-black/30',
                 className
             )}
         >

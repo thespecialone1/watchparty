@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useSessionStore } from '@/store/sessionStore';
-import { Eye, EyeOff, Copy, Check, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check, Loader2, ArrowLeft, MonitorPlay } from 'lucide-react';
 
 export function CreateSession() {
     const navigate = useNavigate();
@@ -78,14 +78,31 @@ export function CreateSession() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-dark p-4">
-            <Card className="w-full max-w-md glass-card fade-in">
+        <div className="flex items-center justify-center min-h-screen bg-gradient-warm p-4 relative">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-subtle pointer-events-none" />
+
+            {/* Back button */}
+            <button
+                onClick={() => navigate('/')}
+                className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+            </button>
+
+            <Card className="w-full max-w-md relative z-10 fade-in">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <MonitorPlay className="w-5 h-5 text-primary" />
+                        </div>
+                    </div>
+                    <CardTitle className="text-xl font-semibold text-foreground">
                         Create Watch Party
                     </CardTitle>
                     <CardDescription>
-                        Start a new session and invite your friends to watch together
+                        Start a new session and invite your friends
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -135,7 +152,7 @@ export function CreateSession() {
                             <Button
                                 onClick={handleCreate}
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700"
+                                className="w-full"
                             >
                                 {loading ? (
                                     <>
@@ -149,8 +166,8 @@ export function CreateSession() {
                         </>
                     ) : (
                         <div className="space-y-4 fade-in">
-                            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                                <p className="text-sm text-green-400 font-medium">
+                            <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                                <p className="text-sm text-primary font-medium">
                                     ✓ Session created successfully!
                                 </p>
                             </div>
@@ -169,20 +186,20 @@ export function CreateSession() {
                                         onClick={handleCopyLink}
                                     >
                                         {copied ? (
-                                            <Check className="h-4 w-4 text-green-400" />
+                                            <Check className="h-4 w-4 text-primary" />
                                         ) : (
                                             <Copy className="h-4 w-4" />
                                         )}
                                     </Button>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Share this link with your friends to join the session
+                                    Share this link with your friends to join
                                 </p>
                             </div>
 
                             <Button
                                 onClick={handleStartSession}
-                                className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700"
+                                className="w-full"
                             >
                                 Start Watching
                             </Button>

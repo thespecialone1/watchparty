@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MonitorPlay, Users, Shield, Zap } from 'lucide-react';
+import { MonitorPlay, Users, Shield, Zap, ArrowRight } from 'lucide-react';
 
 export function Home() {
     const navigate = useNavigate();
@@ -10,88 +9,116 @@ export function Home() {
         {
             icon: MonitorPlay,
             title: 'Screen Sharing',
-            description: 'Share your screen in 1080p at 30fps with your friends',
+            description: 'Share your screen in high quality with your friends',
         },
         {
             icon: Users,
             title: 'Watch Together',
-            description: 'Invite up to 10 friends to watch together in real-time',
+            description: 'Invite friends to watch together in real-time',
         },
         {
             icon: Shield,
-            title: 'Password Protected',
-            description: 'Keep your sessions private with secure password protection',
+            title: 'Private Sessions',
+            description: 'Password protected rooms for your privacy',
         },
         {
             icon: Zap,
             title: 'Low Latency',
-            description: 'Experience real-time streaming with minimal delay',
+            description: 'Real-time streaming with minimal delay',
         },
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-dark flex flex-col">
+        <div className="min-h-screen bg-gradient-warm flex flex-col relative">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-subtle pointer-events-none" />
+
+            {/* Header */}
+            <header className="relative z-10 px-6 py-5 flex items-center justify-between max-w-6xl mx-auto w-full">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <MonitorPlay className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="font-semibold text-foreground">WatchParty</span>
+                </div>
+                <nav className="hidden md:flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/join')}
+                    >
+                        Join Session
+                    </Button>
+                    <Button
+                        size="sm"
+                        onClick={() => navigate('/create')}
+                    >
+                        Create Session
+                    </Button>
+                </nav>
+            </header>
+
             {/* Hero section */}
-            <div className="flex-1 flex items-center justify-center p-4">
-                <div className="max-w-4xl mx-auto text-center space-y-8">
-                    <div className="space-y-4 fade-in">
-                        <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
-                            WatchParty
+            <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-12">
+                <div className="max-w-3xl mx-auto text-center space-y-10">
+                    {/* Main headline */}
+                    <div className="space-y-5 fade-in">
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-foreground tracking-tight leading-[1.1]">
+                            Watch together,
+                            <br />
+                            <span className="text-muted-foreground">anywhere</span>
                         </h1>
-                        <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-                            Share your screen and watch together with friends in real-time.
-                            Create a private session and start streaming instantly.
+                        <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                            Share your screen and experience content together with friends in real-time. Simple, private, and instant.
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center fade-in">
+                    {/* CTA buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center fade-in" style={{ animationDelay: '100ms' }}>
                         <Button
                             size="lg"
-                            className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-lg px-8"
                             onClick={() => navigate('/create')}
+                            className="group"
                         >
-                            Create Session
+                            Start a Session
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
                         </Button>
                         <Button
                             size="lg"
                             variant="outline"
-                            className="text-lg px-8"
                             onClick={() => navigate('/join')}
                         >
-                            Join Session
+                            Join with Code
                         </Button>
                     </div>
 
                     {/* Features grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-8">
-                        {features.map((feature, index) => (
-                            <Card
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 fade-in" style={{ animationDelay: '200ms' }}>
+                        {features.map((feature) => (
+                            <div
                                 key={feature.title}
-                                className="glass-card text-left fade-in"
-                                style={{ animationDelay: `${index * 100}ms` }}
+                                className="p-4 rounded-xl bg-card/40 border border-border/50 text-left transition-colors hover:bg-card/60"
                             >
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-primary/10">
-                                            <feature.icon className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <CardTitle className="text-lg">{feature.title}</CardTitle>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <CardDescription className="text-base">
-                                        {feature.description}
-                                    </CardDescription>
-                                </CardContent>
-                            </Card>
+                                <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center mb-3">
+                                    <feature.icon className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <h3 className="text-sm font-medium text-foreground mb-1">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    {feature.description}
+                                </p>
+                            </div>
                         ))}
                     </div>
                 </div>
-            </div>
+            </main>
 
             {/* Footer */}
-            <footer className="py-4 text-center text-sm text-muted-foreground">
-                <p>Built with React, WebRTC, and ❤️</p>
+            <footer className="relative z-10 py-6 text-center">
+                <p className="text-xs text-muted-foreground/60">
+                    Simple screen sharing for everyone
+                </p>
             </footer>
         </div>
     );

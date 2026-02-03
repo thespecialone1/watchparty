@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useSessionStore } from '@/store/sessionStore';
-import { Eye, EyeOff, Loader2, Users } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Users, ArrowLeft } from 'lucide-react';
 
 export function JoinSession() {
     const navigate = useNavigate();
@@ -76,15 +76,29 @@ export function JoinSession() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-dark p-4">
-            <Card className="w-full max-w-md glass-card fade-in">
+        <div className="flex items-center justify-center min-h-screen bg-gradient-warm p-4 relative">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-subtle pointer-events-none" />
+
+            {/* Back button */}
+            <button
+                onClick={() => navigate('/')}
+                className="absolute top-6 left-6 z-10 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+            </button>
+
+            <Card className="w-full max-w-md relative z-10 fade-in">
                 <CardHeader className="space-y-1">
-                    <div className="flex items-center gap-2">
-                        <Users className="h-6 w-6 text-purple-400" />
-                        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-transparent">
-                            Join Watch Party
-                        </CardTitle>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Users className="w-5 h-5 text-primary" />
+                        </div>
                     </div>
+                    <CardTitle className="text-xl font-semibold text-foreground">
+                        Join Watch Party
+                    </CardTitle>
                     <CardDescription>
                         Enter the session details to join your friends
                     </CardDescription>
@@ -132,7 +146,7 @@ export function JoinSession() {
                     <Button
                         onClick={handleJoin}
                         disabled={loading}
-                        className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700"
+                        className="w-full"
                     >
                         {loading ? (
                             <>
@@ -147,8 +161,8 @@ export function JoinSession() {
                     <div className="text-center">
                         <Button
                             variant="link"
-                            onClick={() => navigate('/')}
-                            className="text-muted-foreground hover:text-purple-400"
+                            onClick={() => navigate('/create')}
+                            className="text-muted-foreground hover:text-foreground"
                         >
                             Or create a new session
                         </Button>
