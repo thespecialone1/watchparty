@@ -254,3 +254,13 @@ func (r *RedisService) GetConnectionCount(ctx context.Context, sessionID string)
 func (r *RedisService) Health(ctx context.Context) error {
 	return r.client.Ping(ctx).Err()
 }
+
+// Set stores a key-value pair with expiration
+func (r *RedisService) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	return r.client.Set(ctx, key, value, expiration).Err()
+}
+
+// Get retrieves a string value for a key
+func (r *RedisService) Get(ctx context.Context, key string) (string, error) {
+	return r.client.Get(ctx, key).Result()
+}

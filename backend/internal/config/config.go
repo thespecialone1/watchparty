@@ -39,6 +39,12 @@ type Config struct {
 
     // WebRTC
     IceServers []interface{}
+
+    // Security
+    AdminSecret string
+
+    // Metered.ca
+    MeteredAPIKey string
 }
 
 // Load creates a new Config from environment variables
@@ -67,6 +73,8 @@ func Load() *Config {
 		},
 		EnableTunnel: getEnv("ENABLE_TUNNEL", "false") == "true",
 		IceServers:   getIceServers(),
+		AdminSecret:  getEnv("ADMIN_SECRET", ""),
+		MeteredAPIKey: getEnv("METERED_API_KEY", ""),
 	}
 }
 

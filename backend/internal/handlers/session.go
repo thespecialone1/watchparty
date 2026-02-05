@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"watchparty/internal/config"
 	"watchparty/internal/models"
 	"watchparty/internal/services"
 )
@@ -35,6 +36,15 @@ func (h *SessionHandler) CreateSession(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse{
 			Error:   "Validation failed",
 			Details: errors,
+		})
+	}
+
+	// Validate Admin Code if configured
+	cfg := config.Load()
+	if cfg.AdminSecret != "" && req.AdminCode != cfg.AdminSecret {
+		return c.Status(fiber.StatusForbidden).JSON(models.ErrorResponse{
+			Error:   "Forbidden",
+			Message: "Invalid admin code. Session creation is restricted.",
 		})
 	}
 

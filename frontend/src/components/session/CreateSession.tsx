@@ -15,6 +15,7 @@ export function CreateSession() {
 
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
+    const [adminCode, setAdminCode] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -41,7 +42,11 @@ export function CreateSession() {
 
         setLoading(true);
         try {
-            const response = await api.createSession({ name: name.trim(), password });
+            const response = await api.createSession({
+                name: name.trim(),
+                password,
+                admin_code: adminCode.trim()
+            });
 
             // Store session data
             setSession(response.id, response.name, response.token, true, response.ice_servers);
@@ -148,6 +153,18 @@ export function CreateSession() {
                                 <p className="text-xs text-muted-foreground">
                                     Minimum 6 characters
                                 </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="adminCode">Admin Code (Optional)</Label>
+                                <Input
+                                    id="adminCode"
+                                    type="password"
+                                    placeholder="Required if restricted"
+                                    value={adminCode}
+                                    onChange={(e) => setAdminCode(e.target.value)}
+                                    disabled={loading}
+                                />
                             </div>
                             <Button
                                 onClick={handleCreate}

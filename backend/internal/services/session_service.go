@@ -2,7 +2,10 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -77,7 +80,7 @@ func (s *SessionService) CreateSession(ctx context.Context, req *models.CreateSe
 		Name:       session.Name,
 		ShareURL:   shareURL,
 		Token:      token,
-		IceServers: s.config.IceServers,
+		IceServers: s.getIceServers(ctx),
 	}, nil
 }
 
@@ -129,7 +132,7 @@ func (s *SessionService) JoinSession(ctx context.Context, req *models.JoinSessio
 		ID:         session.ID,
 		Name:       session.Name,
 		Token:      token,
-		IceServers: s.config.IceServers,
+		IceServers: s.getIceServers(ctx),
 	}, nil
 }
 
@@ -162,4 +165,67 @@ func (s *SessionService) GetSession(ctx context.Context, sessionID string) (*mod
 // RemoveParticipant removes a participant from a session
 func (s *SessionService) RemoveParticipant(ctx context.Context, sessionID, userID string) error {
 	return s.redis.RemoveParticipant(ctx, sessionID, userID)
+}
+
+// getIceServers retrieves ICE servers from Metered.ca or config
+func (s *SessionService) getIceServers(ctx context.Context) []interface{} {
+	if s.config.MeteredAPIKey == "" {
+		return s.config.IceServers
+	}
+
+	// Try to get from cache
+	if cached, err := s.redis.Get(ctx, "sys:ice_servers"); err == nil {
+		var servers []interface{}
+		if err := json.Unmarshal([]byte(cached), &servers); err == nil {
+			return servers
+		}
+	}
+
+	// Fetch from Metered API
+	// Format: https://<app-name>.metered.live/api/v1/turn/credentials?apiKey=<api-key>
+	// We need app name. Actually usually it's just metered.live/api/v1/turn/credentials?apiKey=... 
+	// The user provided "vibecodingisreal.metered.live".
+    // I should probably make the domain configurable or extract it.
+	// User said: "Metered Domain: vibecodingisreal.metered.live"
+	// So URL is https://vibecodingisreal.metered.live/api/v1/turn/credentials?apiKey=...
+
+	domain := "vibecodingisreal.metered.live" // Default or from env if I added it.
+    // I didn't add MeteredDomain to config, I should have. 
+    // I will hardcode it for now as user provided it or try to fetch it from env "METERED_DOMAIN" using `os.Getenv` if I didn't add it to config struct.
+    // Actually I can check if config has it. I didn't add it.
+    // I'll use os.Getenv for now.
+    
+    if envDomain := os.Getenv("METERED_DOMAIN"); envDomain != "" {
+        domain = envDomain
+    }
+
+	url := fmt.Sprintf("https://%s/api/v1/turn/credentials?apiKey=%s", domain, s.config.MeteredAPIKey)
+	
+    resp, err := http.Get(url)
+	if err != nil {
+		fmt.Printf("Failed to fetch ICE servers: %v\n", err)
+		return s.config.IceServers
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Metered API returned status: %d\n", resp.StatusCode)
+		return s.config.IceServers
+	}
+
+    // Metered returns a JSON array of ICE servers directly? Or an object?
+    // Docs: Returns [ { "urls": "...", "username": "...", "credential": "..." } ]
+    // So we can unmarshal directly into []interface{}
+	var servers []interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&servers); err != nil {
+		fmt.Printf("Failed to decode ICE servers: %v\n", err)
+		return s.config.IceServers
+	}
+
+	// Cache for 1 hour
+	if data, err := json.Marshal(servers); err == nil {
+		s.redis.Set(ctx, "sys:ice_servers", string(data), 1*time.Hour)
+	}
+
+	return servers
 }

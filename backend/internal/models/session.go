@@ -18,8 +18,9 @@ type Session struct {
 
 // CreateSessionRequest is the request body for creating a session
 type CreateSessionRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name      string `json:"name"`
+	Password  string `json:"password"`
+	AdminCode string `json:"admin_code"`
 }
 
 // CreateSessionResponse is the response for session creation

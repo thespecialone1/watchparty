@@ -11,6 +11,7 @@ export interface Session {
 export interface CreateSessionRequest {
     name: string;
     password: string;
+    admin_code?: string;
 }
 
 export interface CreateSessionResponse {
