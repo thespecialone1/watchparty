@@ -14,7 +14,7 @@ import { useChatStore } from '@/store/chatStore';
 import { MessageType, WebSocketMessage, ChatPayload, UserEventPayload, PlaybackControlPayload } from '@/types/message';
 import {
     Mic, MicOff, MonitorUp, MonitorOff,
-    MessageSquare, LogOut, Users, Loader2, X, Volume2
+    LogOut, Users, Loader2, Volume2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
