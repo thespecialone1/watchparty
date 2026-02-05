@@ -7,6 +7,7 @@ interface UseWebRTCOptions {
     isHost: boolean;
     voiceStream: MediaStream | null;  // Microphone audio
     screenStream: MediaStream | null; // Screen share (video + optional audio)
+    iceServers?: string[];
     sendSignal: (
         type: MessageType.WEBRTC_OFFER | MessageType.WEBRTC_ANSWER | MessageType.ICE_CANDIDATE,
         payload: unknown,
@@ -22,7 +23,8 @@ interface PeerConnection {
     ignoreOffer: boolean;
 }
 
-const iceServers: RTCIceServer[] = [
+// Default public STUN servers so it works even if backend fails
+const defaultIceServers: RTCIceServer[] = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
@@ -35,12 +37,20 @@ export const useWebRTC = ({
     voiceStream,
     screenStream,
     sendSignal,
+    iceServers: customIceServers,
 }: UseWebRTCOptions) => {
     const peersRef = useRef<Map<string, PeerConnection>>(new Map());
     const voiceStreamRef = useRef<MediaStream | null>(null);
     const screenStreamRef = useRef<MediaStream | null>(null);
     const { setConnectionState, setRemoteStream, setRemoteVoiceStream, connectionState } = useConnectionStore();
     const [peerCount, setPeerCount] = useState(0);
+
+    // Prepare ICE servers configuration
+    const iceConfig: RTCConfiguration = {
+        iceServers: customIceServers && customIceServers.length > 0
+            ? customIceServers.map(url => ({ urls: url }))
+            : defaultIceServers
+    };
 
     // Keep stream refs in sync
     useEffect(() => {
@@ -59,7 +69,7 @@ export const useWebRTC = ({
         }
 
         console.log(`[WebRTC] Creating peer for ${targetUserId}`);
-        const peer = new RTCPeerConnection({ iceServers });
+        const peer = new RTCPeerConnection(iceConfig);
 
         const peerConnection: PeerConnection = {
             peer,
@@ -159,7 +169,7 @@ export const useWebRTC = ({
         setConnectionState('connecting');
 
         return peer;
-    }, [userId, sendSignal, setConnectionState, setRemoteStream, setRemoteVoiceStream]);
+    }, [userId, sendSignal, setConnectionState, setRemoteStream, setRemoteVoiceStream, iceConfig]);
 
     // Update all tracks on a peer connection
     const updatePeerTracks = useCallback((peer: RTCPeerConnection) => {

@@ -98,52 +98,126 @@ func (r *RedisService) DeleteSession(ctx context.Context, sessionID string) erro
 	return nil
 }
 
-// AddParticipant adds a participant to a session
+// AddParticipant adds a participant to a session atomically
 func (r *RedisService) AddParticipant(ctx context.Context, sessionID, userID string) error {
-	session, err := r.GetSession(ctx, sessionID)
-	if err != nil {
-		return err
-	}
-	if session == nil {
-		return fmt.Errorf("session not found")
-	}
+	key := sessionKey(sessionID)
+	maxRetries := 5
 
-	// Check if already a participant
-	for _, p := range session.Participants {
-		if p == userID {
-			return nil // Already a participant
+	// Retry loop for optimistic locking
+	for i := 0; i < maxRetries; i++ {
+		err := r.client.Watch(ctx, func(tx *redis.Tx) error {
+			// Get current session
+			data, err := tx.Get(ctx, key).Bytes()
+			if err != nil {
+				if err == redis.Nil {
+					return fmt.Errorf("session not found")
+				}
+				return err
+			}
+
+			var session models.Session
+			if err := json.Unmarshal(data, &session); err != nil {
+				return err
+			}
+
+			// Check if already a participant
+			for _, p := range session.Participants {
+				if p == userID {
+					return nil // Already a participant
+				}
+			}
+
+			// Check max participants
+			if len(session.Participants) >= session.MaxParticipants {
+				return fmt.Errorf("session is full")
+			}
+
+			// Add participant
+			session.Participants = append(session.Participants, userID)
+
+			newData, err := json.Marshal(session)
+			if err != nil {
+				return err
+			}
+
+			// Execute transaction
+			_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+				pipe.Set(ctx, key, newData, time.Until(session.ExpiresAt))
+				return nil
+			})
+			return err
+		}, key)
+
+		if err == nil {
+			return nil // Success
 		}
+		if err == redis.TxFailedErr {
+			// Optimistic lock failed, retry
+			continue
+		}
+		return err // Other error
 	}
 
-	// Check max participants
-	if len(session.Participants) >= session.MaxParticipants {
-		return fmt.Errorf("session is full")
-	}
-
-	session.Participants = append(session.Participants, userID)
-	return r.SaveSession(ctx, session)
+	return fmt.Errorf("failed to add participant after retries")
 }
 
-// RemoveParticipant removes a participant from a session
+// RemoveParticipant removes a participant from a session atomically
 func (r *RedisService) RemoveParticipant(ctx context.Context, sessionID, userID string) error {
-	session, err := r.GetSession(ctx, sessionID)
-	if err != nil {
+	key := sessionKey(sessionID)
+	maxRetries := 5
+
+	for i := 0; i < maxRetries; i++ {
+		err := r.client.Watch(ctx, func(tx *redis.Tx) error {
+			data, err := tx.Get(ctx, key).Bytes()
+			if err != nil {
+				if err == redis.Nil {
+					return nil // Session already gone, nothing to do
+				}
+				return err
+			}
+
+			var session models.Session
+			if err := json.Unmarshal(data, &session); err != nil {
+				return err
+			}
+
+			// Remove participant
+			newParticipants := make([]string, 0, len(session.Participants))
+			found := false
+			for _, p := range session.Participants {
+				if p != userID {
+					newParticipants = append(newParticipants, p)
+				} else {
+					found = true
+				}
+			}
+
+			if !found {
+				return nil // Not in session
+			}
+
+			session.Participants = newParticipants
+			newData, err := json.Marshal(session)
+			if err != nil {
+				return err
+			}
+
+			_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+				pipe.Set(ctx, key, newData, time.Until(session.ExpiresAt))
+				return nil
+			})
+			return err
+		}, key)
+
+		if err == nil {
+			return nil
+		}
+		if err == redis.TxFailedErr {
+			continue
+		}
 		return err
 	}
-	if session == nil {
-		return nil // Session already gone
-	}
-
-	// Remove participant
-	newParticipants := make([]string, 0, len(session.Participants))
-	for _, p := range session.Participants {
-		if p != userID {
-			newParticipants = append(newParticipants, p)
-		}
-	}
-	session.Participants = newParticipants
-
-	return r.SaveSession(ctx, session)
+	return fmt.Errorf("failed to remove participant after retries")
 }
 
 // AddConnection tracks an active WebSocket connection

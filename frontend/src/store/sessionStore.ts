@@ -11,6 +11,7 @@ interface SessionState {
     sessionName: string | null;
     token: string | null;
     isHost: boolean;
+    iceServers: string[];
 
     // Participants
     participants: Map<string, Participant>;
@@ -19,7 +20,7 @@ interface SessionState {
     isConnected: boolean;
 
     // Actions
-    setSession: (sessionId: string, sessionName: string, token: string, isHost: boolean) => void;
+    setSession: (sessionId: string, sessionName: string, token: string, isHost: boolean, iceServers?: string[]) => void;
     setToken: (token: string) => void;
     setIsHost: (isHost: boolean) => void;
     setConnected: (connected: boolean) => void;
@@ -32,15 +33,17 @@ interface SessionState {
 // Helper to get initial state from localStorage
 const getInitialState = () => {
     if (typeof window === 'undefined') {
-        return { sessionId: null, token: null, sessionName: null, isHost: false };
+        return { sessionId: null, token: null, sessionName: null, isHost: false, iceServers: [] };
     }
 
     const token = localStorage.getItem('session_token');
     const sessionId = localStorage.getItem('session_id');
     const sessionName = localStorage.getItem('session_name');
     const isHost = localStorage.getItem('session_is_host') === 'true';
+    const iceServersStr = localStorage.getItem('session_ice_servers');
+    const iceServers = iceServersStr ? JSON.parse(iceServersStr) : [];
 
-    return { sessionId, token, sessionName, isHost };
+    return { sessionId, token, sessionName, isHost, iceServers };
 };
 
 const initial = getInitialState();
@@ -50,21 +53,24 @@ export const useSessionStore = create<SessionState>((set) => ({
     sessionName: initial.sessionName,
     token: initial.token,
     isHost: initial.isHost,
+    iceServers: initial.iceServers,
     participants: new Map(),
     isConnected: false,
 
-    setSession: (sessionId, sessionName, token, isHost) => {
+    setSession: (sessionId, sessionName, token, isHost, iceServers = []) => {
         // Store in localStorage for persistence
         localStorage.setItem('session_token', token);
         localStorage.setItem('session_id', sessionId);
         localStorage.setItem('session_name', sessionName);
         localStorage.setItem('session_is_host', String(isHost));
+        localStorage.setItem('session_ice_servers', JSON.stringify(iceServers));
 
         set({
             sessionId,
             sessionName,
             token,
             isHost,
+            iceServers,
         });
     },
 
@@ -99,12 +105,14 @@ export const useSessionStore = create<SessionState>((set) => ({
         localStorage.removeItem('session_id');
         localStorage.removeItem('session_name');
         localStorage.removeItem('session_is_host');
+        localStorage.removeItem('session_ice_servers');
 
         set({
             sessionId: null,
             sessionName: null,
             token: null,
             isHost: false,
+            iceServers: [],
             participants: new Map(),
             isConnected: false,
         });
@@ -117,6 +125,7 @@ export const useSessionStore = create<SessionState>((set) => ({
             sessionName: state.sessionName,
             token: state.token,
             isHost: state.isHost,
+            iceServers: state.iceServers,
         });
     },
 }));

@@ -34,6 +34,9 @@ type Config struct {
 
 	// Tunnel
 	EnableTunnel bool
+
+    // WebRTC
+    IceServers []string
 }
 
 // Load creates a new Config from environment variables
@@ -61,7 +64,24 @@ func Load() *Config {
 			getEnv("FRONTEND_URL", "http://localhost:5173"),
 		},
 		EnableTunnel: getEnv("ENABLE_TUNNEL", "false") == "true",
+		IceServers:   getIceServers(),
 	}
+}
+
+func getIceServers() []string {
+    // Default public STUN servers
+    defaultServers := []string{
+        "stun:stun.l.google.com:19302",
+        "stun:stun1.l.google.com:19302",
+    }
+    
+    // Check for TURN/STUN in env (comma separated)
+    // Format: "stun:custom.com:3478,turn:user:pass@turn.custom.com:3478"
+    // For now, we'll keep it simple and just return the defaults or a configured JSON string if needed.
+    // Ideally, the frontend needs the full ICE server object structure.
+    // For simplicity here, let's just return a list of URLs that might include TURN.
+    
+    return defaultServers
 }
 
 // Helper functions for environment variables

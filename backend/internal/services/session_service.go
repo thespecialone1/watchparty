@@ -63,7 +63,8 @@ func (s *SessionService) CreateSession(ctx context.Context, req *models.CreateSe
 	}
 
 	// Generate token for host
-	token, err := s.auth.GenerateToken(sessionID, hostID, "Host", true)
+    hostUsername := utils.GenerateRandomUsername()
+	token, err := s.auth.GenerateToken(sessionID, hostID, hostUsername, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
@@ -72,10 +73,11 @@ func (s *SessionService) CreateSession(ctx context.Context, req *models.CreateSe
 	shareURL := fmt.Sprintf("%s/join/%s", baseURL, sessionID)
 
 	return &models.CreateSessionResponse{
-		ID:       sessionID,
-		Name:     session.Name,
-		ShareURL: shareURL,
-		Token:    token,
+		ID:         sessionID,
+		Name:       session.Name,
+		ShareURL:   shareURL,
+		Token:      token,
+		IceServers: s.config.IceServers,
 	}, nil
 }
 
@@ -117,15 +119,17 @@ func (s *SessionService) JoinSession(ctx context.Context, req *models.JoinSessio
 	}
 
 	// Generate token for viewer
-	token, err := s.auth.GenerateToken(req.SessionID, userID, "Viewer", false)
+    viewerUsername := utils.GenerateRandomUsername()
+	token, err := s.auth.GenerateToken(req.SessionID, userID, viewerUsername, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
 	return &models.JoinSessionResponse{
-		ID:    session.ID,
-		Name:  session.Name,
-		Token: token,
+		ID:         session.ID,
+		Name:       session.Name,
+		Token:      token,
+		IceServers: s.config.IceServers,
 	}, nil
 }
 

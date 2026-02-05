@@ -44,7 +44,7 @@ export function CreateSession() {
             const response = await api.createSession({ name: name.trim(), password });
 
             // Store session data
-            setSession(response.id, response.name, response.token, true);
+            setSession(response.id, response.name, response.token, true, response.ice_servers);
             setShareUrl(response.share_url);
 
             toast.success('Session created successfully!');

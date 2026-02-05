@@ -50,7 +50,7 @@ export function WatchRoom() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [participantCount, setParticipantCount] = useState(1);
 
-    const { token, isHost, sessionName, clearSession, addParticipant, removeParticipant, initFromStorage, participants } = useSessionStore();
+    const { token, isHost, sessionName, clearSession, addParticipant, removeParticipant, initFromStorage, participants, iceServers } = useSessionStore();
     const { wsConnected, wsReconnecting, remoteStream, remoteVoiceStream, connectionState } = useConnectionStore();
     const { addMessage } = useChatStore();
 
@@ -143,6 +143,10 @@ export function WatchRoom() {
                 });
                 if (!isChatOpen) {
                     setUnreadCount(prev => prev + 1);
+                    // Play notification sound
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'); // Simple pop sound
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log('Audio play failed:', e));
                 }
                 break;
             }
@@ -229,8 +233,9 @@ export function WatchRoom() {
         userId,
         isHost,
         voiceStream: voiceStream,
-        screenStream: captureStream,
+        screenStream: isHost ? captureStream : null,
         sendSignal,
+        iceServers,
     });
 
     webRTCRef.current = webRTC;
@@ -450,7 +455,7 @@ export function WatchRoom() {
                                 <div className="relative">
                                     <MessageSquare className="w-5 h-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse shadow-glow-red">
                                             {unreadCount > 9 ? '9+' : unreadCount}
                                         </span>
                                     )}

@@ -43,7 +43,7 @@ export function JoinSession() {
             });
 
             // Store session data
-            setSession(response.id, response.name, response.token, false);
+            setSession(response.id, response.name, response.token, false, response.ice_servers);
 
             toast.success('Joined session successfully!');
             navigate(`/watch/${response.id}`);
