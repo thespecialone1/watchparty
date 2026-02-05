@@ -105,6 +105,20 @@ export function WatchRoom() {
         return () => clearTimeout(timeout);
     }, [startVoiceChat]);
 
+    // DEBUG: Verify ICE Servers
+    useEffect(() => {
+        console.log('[WatchRoom] ICE Servers:', iceServers);
+        toast.info(`ICE Config: ${iceServers?.length || 0} servers loaded`, { duration: 5000 });
+        if (iceServers && iceServers.length > 0) {
+            const hasTurn = iceServers.some(s => s.urls.toString().includes('turn:'));
+            if (hasTurn) {
+                toast.success('TURN Server detected! ✅', { duration: 5000 });
+            } else {
+                toast.warning('No TURN server found! Connection may fail on public networks.', { duration: 8000 });
+            }
+        }
+    }, [iceServers]);
+
     // Get user ID from token
     const getUserIdFromToken = (): string => {
         if (!token) return '';
