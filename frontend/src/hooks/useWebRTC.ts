@@ -7,7 +7,7 @@ interface UseWebRTCOptions {
     isHost: boolean;
     voiceStream: MediaStream | null;  // Microphone audio
     screenStream: MediaStream | null; // Screen share (video + optional audio)
-    iceServers?: string[];
+    iceServers?: RTCIceServer[];
     sendSignal: (
         type: MessageType.WEBRTC_OFFER | MessageType.WEBRTC_ANSWER | MessageType.ICE_CANDIDATE,
         payload: unknown,
@@ -48,7 +48,7 @@ export const useWebRTC = ({
     // Prepare ICE servers configuration
     const iceConfig: RTCConfiguration = {
         iceServers: customIceServers && customIceServers.length > 0
-            ? customIceServers.map(url => ({ urls: url }))
+            ? customIceServers
             : defaultIceServers
     };
 

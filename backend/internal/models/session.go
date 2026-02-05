@@ -24,11 +24,11 @@ type CreateSessionRequest struct {
 
 // CreateSessionResponse is the response for session creation
 type CreateSessionResponse struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	ShareURL   string   `json:"share_url"`
-	Token      string   `json:"token"`
-	IceServers []string `json:"ice_servers"`
+	ID         string        `json:"id"`
+	Name       string        `json:"name"`
+	ShareURL   string        `json:"share_url"`
+	Token      string        `json:"token"`
+	IceServers []interface{} `json:"ice_servers"`
 }
 
 // JoinSessionRequest is the request body for joining a session
@@ -39,10 +39,10 @@ type JoinSessionRequest struct {
 
 // JoinSessionResponse is the response for joining a session
 type JoinSessionResponse struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Token      string   `json:"token"`
-	IceServers []string `json:"ice_servers"`
+	ID         string        `json:"id"`
+	Name       string        `json:"name"`
+	Token      string        `json:"token"`
+	IceServers []interface{} `json:"ice_servers"`
 }
 
 // SessionInfoResponse is the response for getting session details

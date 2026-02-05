@@ -18,7 +18,7 @@ export interface CreateSessionResponse {
     name: string;
     share_url: string;
     token: string;
-    ice_servers?: string[];
+    ice_servers?: RTCIceServer[];
 }
 
 export interface JoinSessionRequest {
@@ -30,7 +30,7 @@ export interface JoinSessionResponse {
     id: string;
     name: string;
     token: string;
-    ice_servers?: string[];
+    ice_servers?: RTCIceServer[];
 }
 
 export interface SessionInfoResponse {

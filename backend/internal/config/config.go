@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/json"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -36,7 +38,7 @@ type Config struct {
 	EnableTunnel bool
 
     // WebRTC
-    IceServers []string
+    IceServers []interface{}
 }
 
 // Load creates a new Config from environment variables
@@ -68,20 +70,34 @@ func Load() *Config {
 	}
 }
 
-func getIceServers() []string {
-    // Default public STUN servers
-    defaultServers := []string{
-        "stun:stun.l.google.com:19302",
-        "stun:stun1.l.google.com:19302",
-    }
-    
-    // Check for TURN/STUN in env (comma separated)
-    // Format: "stun:custom.com:3478,turn:user:pass@turn.custom.com:3478"
-    // For now, we'll keep it simple and just return the defaults or a configured JSON string if needed.
-    // Ideally, the frontend needs the full ICE server object structure.
-    // For simplicity here, let's just return a list of URLs that might include TURN.
-    
-    return defaultServers
+func getIceServers() []interface{} {
+	// Default public STUN servers
+	defaultServers := []interface{}{
+		map[string]interface{}{
+			"urls": "stun:stun.l.google.com:19302",
+		},
+		map[string]interface{}{
+			"urls": "stun:stun1.l.google.com:19302",
+		},
+	}
+
+	envServers := os.Getenv("ICE_SERVERS")
+	if envServers == "" {
+		return defaultServers
+	}
+
+	// Try parsing as JSON
+	var servers []interface{}
+	if err := json.Unmarshal([]byte(envServers), &servers); err != nil {
+		// If JSON parsing fails, assume it's a comma-separated list of STUN/TURN URLs
+		// and try to wrap them in simple objects
+		// or just log error and return default.
+		// For robustness, let's just return defaults if JSON is invalid to avoid breaking app.
+		log.Printf("Invalid ICE_SERVERS JSON: %v. Using defaults.", err)
+		return defaultServers
+	}
+
+	return servers
 }
 
 // Helper functions for environment variables

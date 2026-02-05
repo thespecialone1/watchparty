@@ -11,7 +11,7 @@ interface SessionState {
     sessionName: string | null;
     token: string | null;
     isHost: boolean;
-    iceServers: string[];
+    iceServers: RTCIceServer[];
 
     // Participants
     participants: Map<string, Participant>;
@@ -20,7 +20,7 @@ interface SessionState {
     isConnected: boolean;
 
     // Actions
-    setSession: (sessionId: string, sessionName: string, token: string, isHost: boolean, iceServers?: string[]) => void;
+    setSession: (sessionId: string, sessionName: string, token: string, isHost: boolean, iceServers?: RTCIceServer[]) => void;
     setToken: (token: string) => void;
     setIsHost: (isHost: boolean) => void;
     setConnected: (connected: boolean) => void;
@@ -33,7 +33,7 @@ interface SessionState {
 // Helper to get initial state from localStorage
 const getInitialState = () => {
     if (typeof window === 'undefined') {
-        return { sessionId: null, token: null, sessionName: null, isHost: false, iceServers: [] };
+        return { sessionId: null, token: null, sessionName: null, isHost: false, iceServers: [] as RTCIceServer[] };
     }
 
     const token = localStorage.getItem('session_token');
@@ -41,7 +41,7 @@ const getInitialState = () => {
     const sessionName = localStorage.getItem('session_name');
     const isHost = localStorage.getItem('session_is_host') === 'true';
     const iceServersStr = localStorage.getItem('session_ice_servers');
-    const iceServers = iceServersStr ? JSON.parse(iceServersStr) : [];
+    const iceServers = iceServersStr ? JSON.parse(iceServersStr) as RTCIceServer[] : [];
 
     return { sessionId, token, sessionName, isHost, iceServers };
 };
