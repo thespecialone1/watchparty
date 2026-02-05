@@ -264,3 +264,38 @@ func (r *RedisService) Set(ctx context.Context, key string, value interface{}, e
 func (r *RedisService) Get(ctx context.Context, key string) (string, error) {
 	return r.client.Get(ctx, key).Result()
 }
+
+// Chat Persistence based on session ID
+func chatKey(sessionID string) string {
+	return fmt.Sprintf("chat:%s", sessionID)
+}
+
+// SaveChatMessage stores a chat message in a Redis list
+func (r *RedisService) SaveChatMessage(ctx context.Context, sessionID string, message []byte) error {
+	key := chatKey(sessionID)
+	// Push to right
+	if err := r.client.RPush(ctx, key, message).Err(); err != nil {
+		return err
+	}
+	// Limit history to 50 messages
+	r.client.LTrim(ctx, key, -50, -1)
+	// Set expiry same as session (approx) - actually we should match session TTL logic or just set a long TTL
+	r.client.Expire(ctx, key, r.config.SessionTTL)
+	return nil
+}
+
+// GetChatHistory retrieves recent chat messages
+func (r *RedisService) GetChatHistory(ctx context.Context, sessionID string) ([][]byte, error) {
+	key := chatKey(sessionID)
+	// Get all (or last 50)
+	results, err := r.client.LRange(ctx, key, 0, -1).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	messages := make([][]byte, len(results))
+	for i, res := range results {
+		messages[i] = []byte(res)
+	}
+	return messages, nil
+}

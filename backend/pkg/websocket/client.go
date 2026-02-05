@@ -122,6 +122,8 @@ func (c *Client) handleMessage(message []byte) {
 		}
 
 	case "chat":
+		// Save to history
+		c.hub.SaveMessage(c.SessionID, message)
 		// Broadcast chat to everyone including sender
 		c.hub.Broadcast(c.SessionID, message, "")
 

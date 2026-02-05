@@ -407,6 +407,20 @@ export function WatchRoom() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Mobile Controls Overlay (Top Right) */}
+                        <div className="lg:hidden absolute top-3 right-3 flex gap-2 z-20">
+                            <ControlButton
+                                active={isAudioEnabled}
+                                onClick={toggleAudio}
+                                title={isAudioEnabled ? 'Mute' : 'Unmute'}
+                            >
+                                {isAudioEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+                            </ControlButton>
+                            <ControlButton danger onClick={handleLeave} title="Leave">
+                                <LogOut className="w-4 h-4" />
+                            </ControlButton>
+                        </div>
                     </div>
                 </div>
 

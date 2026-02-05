@@ -1,12 +1,12 @@
-package websocket
-
 import (
 	"encoding/json"
 	"log"
 	"sync"
 	"time"
+    "context"
 
 	"github.com/gofiber/websocket/v2"
+    "watchparty/internal/services"
 )
 
 // Client represents a connected WebSocket client
@@ -39,7 +39,8 @@ type Hub struct {
 	// Direct messages to a specific client
 	direct chan *DirectMessage
 
-	mu sync.RWMutex
+	mu    sync.RWMutex
+    redis *services.RedisService
 }
 
 // BroadcastMessage represents a message to broadcast to a session
@@ -57,13 +58,14 @@ type DirectMessage struct {
 }
 
 // NewHub creates a new Hub instance
-func NewHub() *Hub {
+func NewHub(redis *services.RedisService) *Hub {
 	return &Hub{
 		sessions:   make(map[string]map[string]*Client),
 		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		unregister:   make(chan *Client),
 		broadcast:  make(chan *BroadcastMessage, 256),
 		direct:     make(chan *DirectMessage, 256),
+        redis:      redis,
 	}
 }
 
@@ -98,8 +100,27 @@ func (h *Hub) registerClient(client *Client) {
 	h.sessions[client.SessionID][client.ID] = client
 	log.Printf("Client %s registered to session %s", client.ID, client.SessionID)
 
+    // Send chat history
+    if history, err := h.redis.GetChatHistory(context.Background(), client.SessionID); err == nil {
+        for _, msg := range history {
+            // Send directly to client channel
+            select {
+            case client.Send <- msg:
+            default:
+            }
+        }
+    }
+
 	// Notify other clients about new user
 	h.notifyUserJoined(client)
+}
+
+// SaveMessage stores a message in Redis
+func (h *Hub) SaveMessage(sessionID string, message []byte) {
+    // Fire and forget, don't block
+    go func() {
+        h.redis.SaveChatMessage(context.Background(), sessionID, message)
+    }()
 }
 
 func (h *Hub) unregisterClient(client *Client) {

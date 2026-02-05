@@ -42,7 +42,7 @@ func main() {
 	sessionService := services.NewSessionService(redisService, authService, cfg)
 
 	// Initialize WebSocket hub
-	hub := websocket.NewHub()
+	hub := websocket.NewHub(redisService)
 	go hub.Run()
 	log.Println("WebSocket hub started")
 
