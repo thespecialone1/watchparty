@@ -46,8 +46,6 @@ export function WatchRoom() {
     const navigate = useNavigate();
 
     // UI State
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
     const [participantCount, setParticipantCount] = useState(1);
 
     const { token, isHost, sessionName, clearSession, addParticipant, removeParticipant, initFromStorage, participants, iceServers } = useSessionStore();
@@ -143,13 +141,10 @@ export function WatchRoom() {
                     message: payload.message,
                     timestamp: payload.timestamp,
                 });
-                if (!isChatOpen) {
-                    setUnreadCount(prev => prev + 1);
-                    // Play notification sound
-                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'); // Simple pop sound
-                    audio.volume = 0.5;
-                    audio.play().catch(e => console.log('Audio play failed:', e));
-                }
+                // Play notification sound
+                const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'); // Simple pop sound
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log('Audio play failed:', e));
                 break;
             }
 
@@ -208,7 +203,7 @@ export function WatchRoom() {
             default:
                 console.log('Unhandled message type:', message.type);
         }
-    }, [addMessage, addParticipant, removeParticipant, isHost, isChatOpen, userId]);
+    }, [addMessage, addParticipant, removeParticipant, isHost, userId]);
 
     // Setup WebSocket
     const { sendChat, sendSignal, sendPlaybackControl } = useWebSocket({
@@ -275,12 +270,6 @@ export function WatchRoom() {
         clearSession();
         navigate('/');
         toast.info('You have left the session');
-    };
-
-    // Toggle chat panel
-    const handleToggleChat = () => {
-        setIsChatOpen(!isChatOpen);
-        if (!isChatOpen) setUnreadCount(0);
     };
 
     // Determine display stream for main video
