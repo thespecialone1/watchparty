@@ -105,19 +105,7 @@ export function WatchRoom() {
         return () => clearTimeout(timeout);
     }, [startVoiceChat]);
 
-    // DEBUG: Verify ICE Servers
-    useEffect(() => {
-        console.log('[WatchRoom] ICE Servers:', iceServers);
-        toast.info(`ICE Config: ${iceServers?.length || 0} servers loaded`, { duration: 5000 });
-        if (iceServers && iceServers.length > 0) {
-            const hasTurn = iceServers.some(s => s.urls.toString().includes('turn:'));
-            if (hasTurn) {
-                toast.success('TURN Server detected! ✅', { duration: 5000 });
-            } else {
-                toast.warning('No TURN server found! Connection may fail on public networks.', { duration: 8000 });
-            }
-        }
-    }, [iceServers]);
+    // Get user ID from token
 
     // Get user ID from token
     const getUserIdFromToken = (): string => {
@@ -396,10 +384,10 @@ export function WatchRoom() {
 
             {/* Main content */}
             <main className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
-                {/* Video area */}
-                <div className="flex-1 flex flex-col min-h-0 p-2 lg:p-3">
+                {/* Video area - Top 50% on mobile, Left side on desktop */}
+                <div className="flex-shrink-0 h-[40vh] lg:h-auto lg:flex-1 flex flex-col min-h-0 p-2 lg:p-3 bg-black">
                     {/* Main video (shared content) */}
-                    <div className="flex-1 min-h-0 relative group">
+                    <div className="flex-1 min-h-0 relative group rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800/50">
                         {displayStream ? (
                             <>
                                 <VideoPlayer
@@ -408,8 +396,8 @@ export function WatchRoom() {
                                     isLocal={isHost}
                                     className="w-full h-full"
                                 />
-                                {/* Playback Controls Overlay - always show for all users when stream is active */}
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                {/* Playback Controls Overlay - Desktop only */}
+                                <div className="hidden lg:block absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <div className="bg-zinc-900/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-zinc-700/50">
                                         <PlaybackControls
                                             onControl={handlePlaybackControl}
@@ -419,68 +407,26 @@ export function WatchRoom() {
                                 </div>
                             </>
                         ) : (
-                            <div className="w-full h-full rounded-xl bg-zinc-900 flex items-center justify-center border border-zinc-800/50">
+                            <div className="w-full h-full flex items-center justify-center">
                                 <div className="text-center p-6">
-                                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-800/50 flex items-center justify-center">
-                                        <MonitorUp className="w-7 h-7 text-zinc-500" />
+                                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                                        <MonitorUp className="w-6 h-6 text-zinc-500" />
                                     </div>
-                                    <p className="text-zinc-300 text-base font-medium mb-1">
-                                        {isHost ? 'Ready to share your screen' : 'Waiting for host to share'}
+                                    <p className="text-zinc-300 text-sm font-medium">
+                                        {isHost ? 'Share your screen' : 'Waiting for host...'}
                                     </p>
-                                    <p className="text-zinc-500 text-sm">
-                                        {isHost ? 'Click the screen share button below' : 'The stream will appear here'}
-                                    </p>
-                                    {voiceStream && (
-                                        <p className="text-primary text-sm mt-4">
-                                            🎤 Voice chat is active - you can talk!
-                                        </p>
-                                    )}
                                 </div>
                             </div>
                         )}
                     </div>
+                </div>
 
-                    {/* Mobile: Controls at bottom */}
-                    <div className="lg:hidden flex-shrink-0 mt-2">
-                        <div className="flex items-center justify-center gap-2 py-2 px-4 bg-zinc-900/80 backdrop-blur rounded-full mx-auto w-fit">
-                            {/* Mic toggle - always visible */}
-                            <ControlButton
-                                active={isAudioEnabled}
-                                onClick={toggleAudio}
-                                title={isAudioEnabled ? 'Mute' : 'Unmute'}
-                            >
-                                {isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-                            </ControlButton>
-
-                            {isHost && (
-                                <ControlButton
-                                    active={!isCapturing}
-                                    onClick={handleScreenShareToggle}
-                                    title={isCapturing ? 'Stop sharing' : 'Share screen'}
-                                >
-                                    {isCapturing ? <MonitorOff className="w-5 h-5" /> : <MonitorUp className="w-5 h-5" />}
-                                </ControlButton>
-                            )}
-
-                            <ControlButton
-                                onClick={handleToggleChat}
-                                title="Chat"
-                            >
-                                <div className="relative">
-                                    <MessageSquare className="w-5 h-5" />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center animate-pulse shadow-glow-red">
-                                            {unreadCount > 9 ? '9+' : unreadCount}
-                                        </span>
-                                    )}
-                                </div>
-                            </ControlButton>
-
-                            <ControlButton danger onClick={handleLeave} title="Leave">
-                                <LogOut className="w-5 h-5" />
-                            </ControlButton>
-                        </div>
-                    </div>
+                {/* Mobile: Chat Area (Bottom 60%) */}
+                <div className="flex-1 lg:hidden flex flex-col min-h-0 border-t border-zinc-800/50 bg-zinc-900/30">
+                    <ChatPanel
+                        onSendMessage={(message) => sendChat(message, userId, username)}
+                        userId={userId}
+                    />
                 </div>
 
                 {/* Desktop: Right sidebar */}
@@ -523,12 +469,9 @@ export function WatchRoom() {
                         {/* Status info */}
                         <div className="mt-3 text-xs text-zinc-500">
                             {isAudioEnabled ? (
-                                <span className="text-primary">🎤 Your mic is on</span>
+                                <span className="text-primary">🎤 Mic on</span>
                             ) : (
-                                <span>🔇 Your mic is muted</span>
-                            )}
-                            {hasRemoteUser && remoteVoiceStream && (
-                                <span className="ml-2 text-emerald-400">• Hearing others</span>
+                                <span>🔇 Mic muted</span>
                             )}
                         </div>
                     </div>
@@ -542,27 +485,6 @@ export function WatchRoom() {
                     </div>
                 </div>
             </main>
-
-            {/* Mobile chat overlay */}
-            {isChatOpen && (
-                <div className="fixed inset-0 z-50 bg-zinc-950/98 backdrop-blur-sm flex flex-col lg:hidden">
-                    <div className="flex items-center justify-between p-3 border-b border-zinc-800/50">
-                        <h2 className="text-base font-medium text-zinc-100">Chat</h2>
-                        <button
-                            onClick={handleToggleChat}
-                            className="p-2 rounded-full hover:bg-zinc-800 transition-colors"
-                        >
-                            <X className="w-5 h-5 text-zinc-400" />
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                        <ChatPanel
-                            onSendMessage={(message) => sendChat(message, userId, username)}
-                            userId={userId}
-                        />
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

@@ -156,11 +156,11 @@ export function CreateSession() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="adminCode">Admin Code (Optional)</Label>
+                                <Label htmlFor="adminCode">Admin Code</Label>
                                 <Input
                                     id="adminCode"
                                     type="password"
-                                    placeholder="Required if restricted"
+                                    placeholder="Enter admin code"
                                     value={adminCode}
                                     onChange={(e) => setAdminCode(e.target.value)}
                                     disabled={loading}

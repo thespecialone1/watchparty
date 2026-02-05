@@ -194,11 +194,22 @@ export function VideoPlayer({ stream, isMuted = false, isLocal = false, classNam
 
     useEffect(() => {
         const handleFullscreenChange = () => {
-            setIsFullscreen(!!document.fullscreenElement);
+            const isFs = !!document.fullscreenElement;
+            setIsFullscreen(isFs);
+
+            // Resume playback if we exited fullscreen and it paused
+            if (!isFs && videoRef.current && videoRef.current.paused) {
+                console.log('[VideoPlayer] Exited fullscreen, resuming playback...');
+                videoRef.current.play().catch(console.warn);
+            }
         };
 
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari support
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
     }, []);
 
     if (!stream) {
